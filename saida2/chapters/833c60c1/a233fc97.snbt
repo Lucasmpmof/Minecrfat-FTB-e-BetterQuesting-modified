@@ -1,0 +1,1 @@
+{title: "&6&l{mce.generic.message.unavailable_in_challenge_mode}", x: 0.0d, y: 0.0d, text: ["This quest is not intended to be completed when in Challenge mode, however, it should be automatically in Classic mode."], tasks: [{uid: "a24ef39e", type: "custom"}]}
