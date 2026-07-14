@@ -8,6 +8,7 @@ from actions.remove_mod import remove_mod
 from actions.validate import validate
 from actions.clean import clean
 from actions.modpack_profile import modpack_profile
+from actions.progression import progression
 
 
 def main():
@@ -196,6 +197,19 @@ def main():
         help="Salvar relatório JSON"
     )
 
+    #
+    # PROGRESSION
+    #
+
+    progression_parser = subparsers.add_parser(
+        "progression"
+    )
+
+    progression_parser.add_argument(
+        "--questbook",
+        required=True
+    )
+
     args = parser.parse_args()
 
 
@@ -287,6 +301,12 @@ def main():
             output=args.output,
             dry_run=args.dry_run,
             report_file=args.report
+        )
+
+    elif args.command == "progression":
+
+        progression(
+            folder=args.questbook
         )
 
 if __name__ == "__main__":
