@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
+from statistics import mean
 
 from core.models import QuestBook
 from core.progression_graph import ProgressionGraph
+from core.progression_cluster import ProgressionCluster, ProgressionClusterDetector
 
 
 @dataclass
@@ -86,6 +88,26 @@ class ProgressionReport:
     average_chain_size: float = 0.0
 
     # ------------------------------------------------------
+    # Estatísticas de ProgressionCluster (v0.8.2)
+    # ------------------------------------------------------
+
+    clusters: list[ProgressionCluster] = field(default_factory=list)
+
+    total_clusters: int = 0
+
+    largest_cluster_id: str | None = None
+
+    largest_cluster_size: int = 0
+
+    smallest_cluster_id: str | None = None
+
+    smallest_cluster_size: int = 0
+
+    average_cluster_size: float = 0.0
+
+    quests_represented_by_clusters: int = 0
+
+    # ------------------------------------------------------
     # Export
     # ------------------------------------------------------
 
@@ -128,6 +150,25 @@ class ProgressionReport:
             "longest_chain": self.longest_chain,
 
             "average_chain_size": self.average_chain_size,
+
+            "clusters": [
+                cluster.to_dict()
+                for cluster in self.clusters
+            ],
+
+            "total_clusters": self.total_clusters,
+
+            "largest_cluster_id": self.largest_cluster_id,
+
+            "largest_cluster_size": self.largest_cluster_size,
+
+            "smallest_cluster_id": self.smallest_cluster_id,
+
+            "smallest_cluster_size": self.smallest_cluster_size,
+
+            "average_cluster_size": self.average_cluster_size,
+
+            "quests_represented_by_clusters": self.quests_represented_by_clusters,
 
         }
 
@@ -206,6 +247,28 @@ class ProgressionReport:
 
         print(f" Average chain size: {self.average_chain_size:.2f}")
 
+        print("\nCLUSTERS")
+
+        print(f" Total clusters: {self.total_clusters}")
+
+        print(f" Quests represented by clusters: {self.quests_represented_by_clusters} / {self.total_quests}")
+
+        print(f" Average cluster size: {self.average_cluster_size:.2f}")
+
+        if self.largest_cluster_id:
+
+            print(
+                f" Largest cluster: {self.largest_cluster_id} "
+                f"({self.largest_cluster_size} quests)"
+            )
+
+        if self.smallest_cluster_id:
+
+            print(
+                f" Smallest cluster: {self.smallest_cluster_id} "
+                f"({self.smallest_cluster_size} quests)"
+            )
+
         print("================================\n")
 
 
@@ -243,6 +306,23 @@ class ProgressionAnalyzer:
             for component in raw_components
         ]
 
+        clusters = ProgressionClusterDetector().detect(
+            questbook,
+            graph=graph,
+        )
+
+        cluster_sizes = [cluster.quest_count for cluster in clusters]
+
+        largest_cluster = (
+            max(clusters, key=lambda cluster: cluster.quest_count)
+            if clusters else None
+        )
+
+        smallest_cluster = (
+            min(clusters, key=lambda cluster: cluster.quest_count)
+            if clusters else None
+        )
+
         report = ProgressionReport(
 
             total_quests=questbook.total_quests(),
@@ -274,6 +354,22 @@ class ProgressionAnalyzer:
             longest_chain=graph.longest_chain(),
 
             average_chain_size=average_chain_size,
+
+            clusters=clusters,
+
+            total_clusters=len(clusters),
+
+            largest_cluster_id=largest_cluster.id if largest_cluster else None,
+
+            largest_cluster_size=largest_cluster.quest_count if largest_cluster else 0,
+
+            smallest_cluster_id=smallest_cluster.id if smallest_cluster else None,
+
+            smallest_cluster_size=smallest_cluster.quest_count if smallest_cluster else 0,
+
+            average_cluster_size=mean(cluster_sizes) if cluster_sizes else 0.0,
+
+            quests_represented_by_clusters=sum(cluster_sizes),
 
         )
 
@@ -337,3 +433,7 @@ class ProgressionAnalyzer:
     def detect_cycles(self, questbook: QuestBook) -> list[list[str]]:
 
         return ProgressionGraph.build(questbook).detect_cycles()
+
+    def detect_clusters(self, questbook: QuestBook) -> list[ProgressionCluster]:
+
+        return ProgressionClusterDetector().detect(questbook)

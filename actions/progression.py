@@ -3,10 +3,11 @@ from pathlib import Path
 from core.parser import QuestbookParser
 from core.ftbquests import FTBQuestsParser
 from core.progression_analyzer import ProgressionAnalyzer
+from core.cluster_export import export_clusters
 from core.profile_utils import resolve_profiles
 
 
-def progression(folder):
+def progression(folder, export_clusters_file=None):
 
     folder = Path(folder)
 
@@ -49,3 +50,21 @@ def progression(folder):
         report = analyzer.analyze(questbook)
 
         report.summary()
+
+        if export_clusters_file:
+
+            profile_export_file = (
+                _per_profile_path(export_clusters_file, profile.name)
+                if multi else export_clusters_file
+            )
+
+            export_clusters(questbook, profile_export_file)
+
+            print(f"Clusters exportados em: {profile_export_file}")
+
+
+def _per_profile_path(path_str, profile_name):
+
+    path = Path(path_str)
+
+    return str(path.with_name(f"{path.stem}_{profile_name}{path.suffix}"))

@@ -210,6 +210,14 @@ def main():
         required=True
     )
 
+    progression_parser.add_argument(
+        "--export-clusters",
+        help=(
+            "Exporta ProgressionClusters + ClusterGraph para um "
+            "arquivo JSON (ex.: clusters.json)"
+        )
+    )
+
     args = parser.parse_args()
 
 
@@ -306,7 +314,8 @@ def main():
     elif args.command == "progression":
 
         progression(
-            folder=args.questbook
+            folder=args.questbook,
+            export_clusters_file=args.export_clusters
         )
 
 if __name__ == "__main__":
